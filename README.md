@@ -36,16 +36,18 @@ All number query parameters will be in hex format for consistency.
 
 These are the currently available routes:
 
-- `/` - Health check to see if the sysmodule is running
-- `/refreshMetadata` - Refreshes the game metadata used to power other routes
-- `/titleId` - Returns the title Id of the game
-- `/readHeap?offset=<hex>&size=<hex>` - Read values from the heap
+- GET   `/` - Health check to see if the sysmodule is running
+- GET   `/refreshMetadata` - Refreshes the game metadata used to power other routes
+- GET   `/titleId` - Returns the title Id of the game
+- GET   `/readHeap?offset=<hex>&size=<hex>` - Read values from the heap
+- POST  `/input` - Input Button presses to the Switch
 
 ### TODO
 - [ ] Endpoint to grab current screen
 - [ ] Documentation
-- [ ] POST endpoint for pressing buttons
+- [x] POST endpoint for pressing buttons
 - [ ] Fix reading heap, etc.
+- [ ] Account Data
 
 ## Credits
 
@@ -54,3 +56,4 @@ Thanks to the following groups, individuals, and contributors:
 - ReSwitched for [Atmosphere-libs](https://github.com/Atmosphere-NX/Atmosphere-libs)
 - Switchbrew for [libnx](https://github.com/switchbrew/libnx)
 - yhirose for [cpp-httplib](https://github.com/yhirose/cpp-httplib/)
+- PaskaPinishkes for [sys-hidplus](https://github.com/PaskaPinishkes/sys-hidplus)

@@ -3,6 +3,7 @@
 #include "utils.hpp"
 #include <memory>
 #include <switch.h>
+#include "con_manager.hpp"
 
 extern "C" {
     #define HEAP_SIZE 0x000340000
@@ -35,6 +36,11 @@ void __appInit(void) {
     fsdevMountSdmc();
     timeInitialize();
     socketInitializeDefault();
+    hidInitialize();
+    hiddbgInitialize();
+    ldrDmntInitialize();
+    HiddbgHdlsSessionId sess;
+    hiddbgAttachHdlsWorkBuffer(&sess);
 }
 
 void __appExit(void) {
@@ -50,6 +56,8 @@ void __appExit(void) {
     socketExit();
     nsExit();
     setExit();
+    hidExit();
+    hiddbgExit();
     }
 }
 
@@ -84,6 +92,33 @@ int main() {
                 res.set_content("0", "text/plain");}
         } else {
             res.set_content("0", "text/plain");}
+    });
+
+    server.Get("/test", [](const Request &req, Response &res) {
+        Result rc;
+        size_t jpeg_buf_size = 0x80000;
+        unsigned char* jpeg_buf = new unsigned char[jpeg_buf_size];
+        u64 out_jpeg_size;
+        rc = capsscCaptureJpegScreenShot(&out_jpeg_size, jpeg_buf, jpeg_buf_size, ViLayerStack_Default, 1000000000);
+        if(R_FAILED(rc)) {
+            res.set_content("abc", "text/plain");
+        }	
+        else {
+            res.set_content("Failed", "text/plain");
+        }
+    });
+
+    server.Post("/input", [](const Request &req, Response &res) {
+        if (req.has_param("keys")) {
+            if (R_FAILED(apply_fake_con_state(req))) {
+                res.set_content("Failed", "text/plain");
+            } else{
+                res.set_content(req.get_param_value("keys"), "text/plain");
+            }
+        } else {
+            res.set_content("Need `keys` field.", "text/plain");
+        }
+        
     });
 
     server.Get("/readHeap", [game](const Request &req, Response &res) {
