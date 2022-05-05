@@ -97,6 +97,7 @@ int main() {
     server.Post("/input", [](const Request &req, Response &res) {
         if (req.has_param("keys")) {
             if (R_FAILED(apply_fake_con_state(req))) {
+                res.status = 500;
                 res.set_content("Failed", "text/plain");
             } else{
                 res.set_content(req.get_param_value("keys"), "text/plain");

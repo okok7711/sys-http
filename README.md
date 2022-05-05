@@ -40,7 +40,7 @@ These are the currently available routes:
 - GET   `/refreshMetadata` - Refreshes the game metadata used to power other routes
 - GET   `/titleId` - Returns the title Id of the game
 - GET   `/readHeap?offset=<hex>&size=<hex>` - Read values from the heap
-- POST  `/input` - Input Button presses to the Switch
+- POST  `/input` - Input Button presses to the Switch (See [The Wiki](https://github.com/okok7711/sys-http/wiki/-input#input) for help)
 
 ### TODO
 - [ ] Endpoint to grab current screen
