@@ -94,20 +94,6 @@ int main() {
             res.set_content("0", "text/plain");}
     });
 
-    server.Get("/test", [](const Request &req, Response &res) {
-        Result rc;
-        size_t jpeg_buf_size = 0x80000;
-        unsigned char* jpeg_buf = new unsigned char[jpeg_buf_size];
-        u64 out_jpeg_size;
-        rc = capsscCaptureJpegScreenShot(&out_jpeg_size, jpeg_buf, jpeg_buf_size, ViLayerStack_Default, 1000000000);
-        if(R_FAILED(rc)) {
-            res.set_content("abc", "text/plain");
-        }	
-        else {
-            res.set_content("Failed", "text/plain");
-        }
-    });
-
     server.Post("/input", [](const Request &req, Response &res) {
         if (req.has_param("keys")) {
             if (R_FAILED(apply_fake_con_state(req))) {
