@@ -41,6 +41,12 @@ These are the currently available routes:
 - `/titleId` - Returns the title Id of the game
 - `/readHeap?offset=<hex>&size=<hex>` - Read values from the heap
 
+### TODO
+- [ ] Endpoint to grab current screen
+- [ ] Documentation
+- [ ] POST endpoint for pressing buttons
+- [ ] Fix reading heap, etc.
+
 ## Credits
 
 Thanks to the following groups, individuals, and contributors:
