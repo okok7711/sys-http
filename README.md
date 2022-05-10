@@ -44,10 +44,11 @@ These are the currently available routes:
 
 ### TODO
 - [ ] Endpoint to grab current screen
-- [ ] Documentation
+- [x] Documentation
 - [x] POST endpoint for pressing buttons
 - [ ] Fix reading heap, etc.
-- [ ] Account Data
+- [x] Account Data
+- [x] JSON Functionality
 
 ## Credits
 
@@ -57,3 +58,4 @@ Thanks to the following groups, individuals, and contributors:
 - Switchbrew for [libnx](https://github.com/switchbrew/libnx)
 - yhirose for [cpp-httplib](https://github.com/yhirose/cpp-httplib/)
 - PaskaPinishkes for [sys-hidplus](https://github.com/PaskaPinishkes/sys-hidplus)
+- nlohmann for [json.hpp](https://github.com/nlohmann/json)

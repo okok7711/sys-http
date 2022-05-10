@@ -4,6 +4,7 @@
 #include <memory>
 #include <switch.h>
 #include "con_manager.hpp"
+#include "nlohmann/json.hpp"
 
 extern "C" {
     #define HEAP_SIZE 0x000340000
@@ -27,7 +28,6 @@ void __appInit(void) {
     SetSysFirmwareVersion fw;
     setsysGetFirmwareVersion(&fw);
     hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
-    setsysExit();
     setInitialize();
     pmdmntInitialize();
     nsInitialize();
@@ -41,6 +41,10 @@ void __appInit(void) {
     ldrDmntInitialize();
     HiddbgHdlsSessionId sess;
     hiddbgAttachHdlsWorkBuffer(&sess);
+
+    accountInitialize(AccountServiceType_System);
+    pdmqryInitialize();
+    romfsInit();
 }
 
 void __appExit(void) {
@@ -48,7 +52,6 @@ void __appExit(void) {
     capsscExit();
     pminfoExit();
     pmdmntExit();
-    setsysExit();
     fsdevUnmountAll();
     fsExit();
     smExit();
@@ -58,10 +61,16 @@ void __appExit(void) {
     setExit();
     hidExit();
     hiddbgExit();
+
+    accountExit();
+    romfsExit();
+    pdmqryExit();
+    setsysExit();
     }
 }
 
 using namespace httplib;
+using namespace nlohmann;
 
 #define SET_STATUS_FROM_RC(res, rc)     \
     if (R_FAILED(rc)) {                 \
@@ -79,6 +88,37 @@ int main() {
         SET_STATUS_FROM_RC(res, game->RefreshMetadata());
     });
 
+    server.Get("/user", [](const Request &req, Response &res) {
+        AccountUid uid[ACC_USER_LIST_SIZE];
+        AccountProfile profile;
+        AccountProfileBase profile_base;
+        s32 num = 0;
+        s32 idx = 0;
+        res.status = 500;
+        res.set_content("Failed", "text/plain");
+        Result rc = accountListAllUsers(uid, ACC_USER_LIST_SIZE, &num);
+        if (R_SUCCEEDED(rc)){
+            if (req.has_param("index")) {
+                idx = stoull(req.get_param_value("index"));
+                if (idx > num - 1) {
+                    res.set_content("Index too big", "text/plain");
+                    return;
+                };
+            };
+            Result rc = accountGetProfile(&profile, uid[idx]);
+            if (R_SUCCEEDED(rc)){
+                rc = accountProfileGet(&profile, NULL, &profile_base);
+                if (R_SUCCEEDED(rc)){
+                    json json;
+                    json["nickname"] = profile_base.nickname;
+                    json["uid"] = uid[idx].uid;
+                    res.status = 200;
+                    res.set_content(json.dump(4), "application/json");
+                }
+            }
+        }
+    });
+
     server.Get("/titleId", [](const Request &req, Response &res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         u64 processId;
@@ -86,8 +126,9 @@ int main() {
         std::string titleId;
         if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&processId))){
             if (R_SUCCEEDED(pminfoGetProgramId(&programId, processId))) {
-                titleId = convertNumToHexString(programId);
-                res.set_content(titleId, "text/plain");
+                json json;
+                json["titleId"] = convertNumToHexString(programId);
+                res.set_content(json.dump(4), "application/json");
             } else {
                 res.set_content("0", "text/plain");}
         } else {
@@ -95,20 +136,22 @@ int main() {
     });
 
     server.Post("/input", [](const Request &req, Response &res) {
+        json json;
         if (req.has_param("keys")) {
             if (R_FAILED(apply_fake_con_state(req))) {
                 res.status = 500;
-                res.set_content("Failed", "text/plain");
+                json["msg"] = "Failed to apply FakeCon State";
             } else{
-                res.set_content(req.get_param_value("keys"), "text/plain");
+                json["msg"] = req.get_param_value("keys");
             }
         } else {
-            res.set_content("Need `keys` field.", "text/plain");
+            json["msg"] = "Requires `key` field";
         }
-        
+        res.set_content(json.dump(4), "application/json");
     });
 
     server.Get("/readHeap", [game](const Request &req, Response &res) {
+
         res.set_header("Access-Control-Allow-Origin", "*");
 
         u64 offset = 0;
