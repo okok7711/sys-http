@@ -45,6 +45,12 @@ void __appInit(void) {
     accountInitialize(AccountServiceType_System);
     pdmqryInitialize();
     romfsInit();
+
+    tsInitialize();
+    tcInitialize();
+    clkrstInitialize();
+    pcvInitialize();
+    nvInitialize();
 }
 
 void __appExit(void) {
@@ -66,6 +72,12 @@ void __appExit(void) {
     romfsExit();
     pdmqryExit();
     setsysExit();
+
+    tsExit();
+    tcExit();
+    clkrstExit();
+    pcvExit();
+    nvExit();
     }
 }
 
@@ -117,6 +129,48 @@ int main() {
                 }
             }
         }
+    });
+
+    server.Get("/stats", [](const Request &req, Response &res) {
+        ClkrstSession clkSession;
+        u32 cpu_freq;
+        u32 gpu_freq;
+        u32 ram_freq;
+        u64 sys_ram_used;
+        u64 sys_ram_total;
+        u64 app_ram_used;
+        u64 app_ram_total;
+        json json;
+
+        if R_SUCCEEDED(clkrstOpenSession(&clkSession, PcvModuleId_CpuBus, 3)) {
+            clkrstGetClockRate(&clkSession, &cpu_freq);
+            clkrstCloseSession(&clkSession);
+        } else pcvGetClockRate(PcvModule_CpuBus, &cpu_freq);
+        if R_SUCCEEDED(clkrstOpenSession(&clkSession, PcvModuleId_GPU, 3)) {
+            clkrstGetClockRate(&clkSession, &gpu_freq);
+            clkrstCloseSession(&clkSession);
+        } else pcvGetClockRate(PcvModule_GPU, &gpu_freq);
+        if R_SUCCEEDED(clkrstOpenSession(&clkSession, PcvModuleId_EMC, 3)) {
+            clkrstGetClockRate(&clkSession, &ram_freq);
+            clkrstCloseSession(&clkSession);
+        } else pcvGetClockRate(PcvModule_EMC, &ram_freq);
+
+        svcGetSystemInfo(&sys_ram_used, 1, INVALID_HANDLE, 2);
+        svcGetSystemInfo(&sys_ram_total, 0, INVALID_HANDLE, 2);
+        svcGetSystemInfo(&app_ram_used, 1, INVALID_HANDLE, 0);
+        svcGetSystemInfo(&app_ram_total, 0, INVALID_HANDLE, 0);
+
+        json["cpu"]["freq"] = cpu_freq;
+        json["gpu"]["freq"] = gpu_freq;
+        json["ram"]["freq"] = ram_freq;
+
+        json["ram"]["used"]["app"] = app_ram_used;
+        json["ram"]["total"]["app"] = app_ram_total;
+
+        json["ram"]["used"]["sys"] = sys_ram_used;
+        json["ram"]["total"]["sys"] = sys_ram_used;        
+
+        res.set_content(json.dump(4), "application/json");
     });
 
     server.Get("/titleId", [](const Request &req, Response &res) {
