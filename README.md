@@ -47,11 +47,13 @@ These are the currently available routes:
 ### TODO
 - [ ] Endpoint to grab current screen
 - [x] Documentation
-- [x] POST endpoint for pressing buttons
+- [x] POST endpoint for pressing buttons#
+- [ ] Accept JSON Body
 - [ ] Fix reading heap, etc.
 - [x] Account Data
 - [x] JSON Functionality
 - [ ] Add prometheus compliant `/metrics` endpoint
+- [ ] Extend system statistics
 
 ## Credits
 
